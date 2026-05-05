@@ -5,6 +5,7 @@ from PIL import Image
 import supervision as sv
 
 
+
 API_KEY = os.getenv("GOOGLE_API_KEY")
 
 if not API_KEY:
