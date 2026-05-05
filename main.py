@@ -1,32 +1,45 @@
-import cv2
+import os
+from google import genai
+from google.genai import types
+from PIL import Image
+import supervision as sv
 
-cap = cv2.VideoCapture(0)
 
-if not cap.isOpened():
-    print("Error: Could not open camera.")
+API_KEY = os.getenv("GOOGLE_API_KEY")
+
+if not API_KEY:
+    print("Error: GOOGLE_API_KEY not set.")
+    print("Run: export GOOGLE_API_KEY='your_api_key'")
     exit()
 
-print("Press SPACE to capture image... (ESC to exit)")
+# Initialize client
+client = genai.Client(api_key=API_KEY)
 
-while True:
-    ret, frame = cap.read()
+# Model name
+MODEL_NAME = "gemini-1.5-flash"
 
-    if not ret:
-        print("Failed to grab frame")
-        break
 
-    cv2.imshow("Camera", frame)
+IMAGE_PATH = "capture_image.png"
 
-    key = cv2.waitKey(1)
+# Prompt
+PROMPT = "Detect the objects in this image and return a list."
 
-    if key % 256 == 32:  # SPACE
-        img_name = "captured_image.png"
-        cv2.imwrite(img_name, frame)
-        print(f"Image saved as {img_name}")
+# Load image
+try:
+    image = Image.open(IMAGE_PATH)
+except FileNotFoundError:
+    print(f"Error: {IMAGE_PATH} not found.")
+    exit()
 
-    elif key % 256 == 27:  # ESC
-        print("Closing camera...")
-        break
+# Generate response
+response = client.models.generate_content(
+    model=MODEL_NAME,
+    contents=[
+        PROMPT,
+        image
+    ]
+)
 
-cap.release()
-cv2.destroyAllWindows()
+# Print result
+print("\n🔍 Detected Objects:")
+print(response.text)
